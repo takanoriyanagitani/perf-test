@@ -40,7 +40,7 @@ func TestGenerator(t *testing.T) {
 	})
 }
 
-func BenchmarkGenerator(b *testing.B){
+func BenchmarkGenerator(b *testing.B) {
 	b.Run("GeneratorStatic", func(b *testing.B) {
 		b.Run("strings", func(b *testing.B) {
 			var gen GeneratorStatic[[]string] = func() []string {
@@ -63,7 +63,7 @@ func BenchmarkGenerator(b *testing.B){
 			upd(&m)
 
 			b.ResetTimer()
-			for i:=0; i<b.N; i++ {
+			for i := 0; i < b.N; i++ {
 				upd(&m)
 			}
 		})
