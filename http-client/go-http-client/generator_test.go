@@ -130,6 +130,10 @@ func TestGenerator(t *testing.T) {
 
 type generatorTestBufContainerF32 struct{ internal []float32 }
 
+type generatorTestBufContainerNestedF32iv struct{ internal [][16]float32 }
+
+type generatorTestBufContainerNestedF32s struct{ internal [][]float32 }
+
 func BenchmarkGenerator(b *testing.B) {
 	b.Run("GeneratorStatic", func(b *testing.B) {
 		b.Run("strings", func(b *testing.B) {
@@ -351,6 +355,213 @@ func BenchmarkGenerator(b *testing.B) {
 			if (b.N * 9) != tot {
 				b.Fatalf("Unexpected total: %v", tot)
 			}
+		})
+	})
+
+	b.Run("GeneratorArray", func(b *testing.B) {
+		b.Run("nested array", func(b *testing.B) {
+			b.Run("empty", func(b *testing.B) {
+				container := generatorTestBufContainerNestedF32iv{
+					internal: make([][16]float32, 256),
+				}
+
+				var builder func(c *generatorTestBufContainerNestedF32iv) GeneratorArray[
+					int,
+					[16]float32,
+				] = GeneratorArrayBuilderBufferedNew(
+					func(input int, buf [][16]float32) (output [][16]float32) { return },
+					func(c *generatorTestBufContainerNestedF32iv) { c.internal = c.internal[:0] },
+					func(c *generatorTestBufContainerNestedF32iv) (buf [][16]float32) {
+						return c.internal
+					},
+					func(c *generatorTestBufContainerNestedF32iv, buf [][16]float32) {
+						c.internal = buf
+					},
+				)
+
+				var gen GeneratorArray[int, [16]float32] = builder(&container)
+
+				var tot int = 0
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					var generated [][16]float32 = gen(i)
+					tot += len(generated)
+				}
+				if 0 != tot {
+					b.Fatalf("Unexpected total: %v", tot)
+				}
+			})
+
+			b.Run("max", func(b *testing.B) {
+				container := generatorTestBufContainerNestedF32iv{
+					internal: make([][16]float32, 256),
+				}
+
+				var builder func(c *generatorTestBufContainerNestedF32iv) GeneratorArray[
+					int,
+					[16]float32,
+				] = GeneratorArrayBuilderBufferedNew(
+					func(input int, buf [][16]float32) (output [][16]float32) {
+						var generated [][16]float32 = buf
+						var temp [16]float32
+						for i := 0; i < cap(buf); i++ {
+							for j := 0; j < 16; j++ {
+								temp[j] = float32(i) * float32(j)
+							}
+							generated = append(generated, temp)
+						}
+						return generated
+					},
+					func(c *generatorTestBufContainerNestedF32iv) { c.internal = c.internal[:0] },
+					func(c *generatorTestBufContainerNestedF32iv) (buf [][16]float32) {
+						return c.internal
+					},
+					func(c *generatorTestBufContainerNestedF32iv, buf [][16]float32) {
+						c.internal = buf
+					},
+				)
+
+				var gen GeneratorArray[int, [16]float32] = builder(&container)
+
+				var tot int = 0
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					var generated [][16]float32 = gen(i)
+					tot += len(generated)
+				}
+				if (b.N * 256) != tot {
+					b.Fatalf("Unexpected total: %v", tot)
+				}
+			})
+
+			b.Run("more items", func(b *testing.B) {
+				container := generatorTestBufContainerNestedF32iv{
+					internal: make([][16]float32, 256),
+				}
+
+				const items int = 512
+
+				var builder func(c *generatorTestBufContainerNestedF32iv) GeneratorArray[
+					int,
+					[16]float32,
+				] = GeneratorArrayBuilderBufferedNew(
+					func(input int, buf [][16]float32) (output [][16]float32) {
+						var generated [][16]float32 = buf
+						var temp [16]float32
+						for i := 0; i < items; i++ {
+							for j := 0; j < 16; j++ {
+								temp[j] = float32(i) * float32(j)
+							}
+							generated = append(generated, temp)
+						}
+						return generated
+					},
+					func(c *generatorTestBufContainerNestedF32iv) { c.internal = c.internal[:0] },
+					func(c *generatorTestBufContainerNestedF32iv) (buf [][16]float32) {
+						return c.internal
+					},
+					func(c *generatorTestBufContainerNestedF32iv, buf [][16]float32) {
+						c.internal = buf
+					},
+				)
+
+				var gen GeneratorArray[int, [16]float32] = builder(&container)
+
+				var tot int = 0
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					var generated [][16]float32 = gen(i)
+					tot += len(generated)
+				}
+				if (b.N * items) != tot {
+					b.Fatalf("Unexpected total: %v", tot)
+				}
+			})
+		})
+
+		b.Run("nested slice", func(b *testing.B) {
+			b.Run("empty", func(b *testing.B) {
+				var width int = 9
+				var height int = 256
+				var internal [][]float32 = make([][]float32, height)
+				var fixedWidth []float32 = make([]float32, height*width)
+				for ix := range internal {
+					internal[ix], fixedWidth = fixedWidth[:width], fixedWidth[width:]
+				}
+				container := generatorTestBufContainerNestedF32s{internal}
+
+				var builder func(c *generatorTestBufContainerNestedF32s) GeneratorArray[
+					int,
+					[]float32,
+				] = GeneratorArrayBuilderBufferedNew(
+					func(input int, buf [][]float32) (output [][]float32) { return },
+					func(c *generatorTestBufContainerNestedF32s) { c.internal = c.internal[:0] },
+					func(c *generatorTestBufContainerNestedF32s) (buf [][]float32) {
+						return c.internal
+					},
+					func(c *generatorTestBufContainerNestedF32s, buf [][]float32) {
+						c.internal = buf
+					},
+				)
+
+				var gen GeneratorArray[int, []float32] = builder(&container)
+
+				var tot int = 0
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					var generated [][]float32 = gen(i)
+					tot += len(generated)
+				}
+				if 0 != tot {
+					b.Fatalf("Unexpected total: %v", tot)
+				}
+			})
+
+			b.Run("max", func(b *testing.B) {
+				var width int = 9
+				var height int = 256
+				var internal [][]float32 = make([][]float32, height)
+				var fixedWidth []float32 = make([]float32, height*width)
+				for ix := range internal {
+					internal[ix], fixedWidth = fixedWidth[:width], fixedWidth[width:]
+				}
+				container := generatorTestBufContainerNestedF32s{internal}
+
+				var builder func(c *generatorTestBufContainerNestedF32s) GeneratorArray[
+					int,
+					[]float32,
+				] = GeneratorArrayBuilderBufferedNew(
+					func(input int, buf [][]float32) (output [][]float32) {
+						output = buf
+						for i := 0; i < len(buf); i++ {
+							var row []float32 = buf[i]
+							for j := 0; j < len(row); j++ {
+								row[j] = float32(i) * float32(j)
+							}
+						}
+						return
+					},
+					func(c *generatorTestBufContainerNestedF32s) {}, // nop
+					func(c *generatorTestBufContainerNestedF32s) (buf [][]float32) {
+						return c.internal
+					},
+					func(c *generatorTestBufContainerNestedF32s, buf [][]float32) {
+						c.internal = buf
+					},
+				)
+
+				var gen GeneratorArray[int, []float32] = builder(&container)
+
+				var tot int = 0
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					var generated [][]float32 = gen(i)
+					tot += len(generated)
+				}
+				if (b.N * height) != tot {
+					b.Fatalf("Unexpected total: %v", tot)
+				}
+			})
 		})
 	})
 }

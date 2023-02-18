@@ -61,3 +61,22 @@ func GeneratorArrayNumBuilderBufferedNew[B any, I any, N constraints.Integer | c
 		}
 	}
 }
+
+type GeneratorArray[I, N any] func(input I) (output []N)
+
+func GeneratorArrayBuilderBufferedNew[B, I, N any](
+	gen func(input I, buf []N) (output []N),
+	resetBuf func(container B),
+	getBuf func(container B) (buf []N),
+	updateBuf func(container B, buf []N),
+) func(container B) GeneratorArray[I, N] {
+	return func(container B) GeneratorArray[I, N] {
+		return func(input I) (output []N) {
+			resetBuf(container)
+			var buf []N = getBuf(container)
+			var generated []N = gen(input, buf)
+			updateBuf(container, generated)
+			return generated
+		}
+	}
+}
