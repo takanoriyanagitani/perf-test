@@ -64,6 +64,17 @@ func GeneratorArrayNumBuilderBufferedNew[B any, I any, N constraints.Integer | c
 
 type GeneratorArray[I, N any] func(input I) (output []N)
 
+func (g GeneratorArray[I, N]) ToMapUpdator(
+	inputGen func() (input I),
+	key string,
+) MapUpdate {
+	return func(i *MapInput) {
+		var input I = inputGen()
+		var output []N = g(input)
+		i.Set(key, output)
+	}
+}
+
 func GeneratorArrayBuilderBufferedNew[B, I, N any](
 	gen func(input I, buf []N) (output []N),
 	resetBuf func(container B),
