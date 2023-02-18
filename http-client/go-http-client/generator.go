@@ -25,3 +25,22 @@ func GeneratorStaticNew[T any](t T) GeneratorStatic[T] { return func() T { retur
 func (s GeneratorStatic[T]) ToMapUpdator(key string) MapUpdate {
 	return func(m *MapInput) { m.Set(key, s()) }
 }
+
+type GeneratorArrayNum[I any, N constraints.Integer | constraints.Float] func(input I) []N
+
+func GeneratorArrayNumBuilderNew[I any, N constraints.Integer | constraints.Float](
+	gen func(input I, buf []N) []N,
+) func(buf []N) GeneratorArrayNum[I, N] {
+	return func(buf []N) GeneratorArrayNum[I, N] {
+		var b []N = buf
+		updateBuf := func(neo []N) { b = neo }
+		return func(input I) []N {
+			b = b[:0]
+			var neo []N = gen(input, b)
+			if cap(neo) != cap(buf) {
+				updateBuf(neo)
+			}
+			return neo
+		}
+	}
+}
