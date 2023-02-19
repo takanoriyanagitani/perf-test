@@ -33,6 +33,14 @@ func assertTrue(b bool) func(*testing.T) {
 	}
 }
 
+func assertNil(e error) func(*testing.T) {
+	return func(t *testing.T) {
+		if nil != e {
+			t.Fatalf("Must be nil: %v", e)
+		}
+	}
+}
+
 func assertEmpty[T any](s []T) func(*testing.T) {
 	return func(t *testing.T) {
 		var empty bool = 0 == len(s)
