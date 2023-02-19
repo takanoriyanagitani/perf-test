@@ -1,4 +1,4 @@
-module github.com/takanoriyanagitani/perf-test/http-client/go-http-client/v3
+module github.com/takanoriyanagitani/perf-test/v4/http-client/go-http-client
 
 go 1.20
 
