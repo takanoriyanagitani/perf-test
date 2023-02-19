@@ -1,4 +1,4 @@
-package http_client_perf
+package go_http_client
 
 import (
 	"golang.org/x/exp/constraints"
