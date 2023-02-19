@@ -5,7 +5,7 @@ import (
 
 	"strings"
 
-	perf "github.com/takanoriyanagitani/perf-test/v5/http-client/go-http-client"
+	perf "github.com/takanoriyanagitani/perf-test/v6/http-client/go-http-client"
 )
 
 type ExampleBufContainerFixed3 struct {
